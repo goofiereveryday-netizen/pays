@@ -19,8 +19,7 @@ class PaySlipPDF(FPDF):
         self.set_font('Arial', 'B', 12)
         self.cell(0, 7, 'AL-IBRAHIM MEDICARE', 0, 1, 'C')
         self.set_font('Arial', '', 9)
-        self.cell(0, 5, '40H BLOCK COMMERCIAL MARKET, FAISALABAD', 0, 1, 'C')
-        self.cell(0, 5, 'CONTACT: 03017544420 / 03352276200', 0, 1, 'C')
+        self.cell(0, 5, 'CONTACT: 03047906936 / 03329609244', 0, 1, 'C')
         self.ln(10)
 
 # 2. The Web Application Layout
