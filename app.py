@@ -4,7 +4,6 @@ from datetime import datetime
 import calendar
 import os
 
-# 1. The PDF Engine Class
 class PaySlipPDF(FPDF):
     def header(self):
         logo_path = "logo.png"
@@ -14,41 +13,38 @@ class PaySlipPDF(FPDF):
         else:
             self.set_y(10)
 
-        self.set_font('Arial', 'B', 16)
-        self.cell(0, 10, 'PAYSLIP', 0, 1, 'C')
+        self.set_font('Arial', 'B', 15)
+        self.cell(0, 8, 'Payslip', 0, 1, 'C')
         self.set_font('Arial', 'B', 12)
-        self.cell(0, 7, 'AL-IBRAHIM MEDICARE', 0, 1, 'C')
+        self.cell(0, 6, 'AL-IBRAHIM MEDICARE', 0, 1, 'C')
         self.set_font('Arial', '', 9)
-        self.cell(0, 5, 'CONTACT: 03047906936 / 03329609244', 0, 1, 'C')
+        self.cell(0, 5, '40H BLOCK COMMERCIAL MARKET, FAISALABAD', 0, 1, 'C')
+        self.cell(0, 5, 'CONTACT: 03017544420 / 03352276200', 0, 1, 'C')
         self.ln(10)
 
-# 2. The Web Application Layout
 st.set_page_config(page_title="Al-Ibrahim Medicare Portal", page_icon="🏥")
-
 st.title("🏥 Al-Ibrahim Medicare")
-st.subheader("Interactive Pay Slip Generator")
 
 now = datetime.now()
 _, total_days = calendar.monthrange(now.year, now.month)
 current_month_str = now.strftime('%B %Y')
 
-st.info(f"System Date: **{now.strftime('%Y/%m/%d')}** | Days in {now.strftime('%B')}: **{total_days}**")
-
 with st.form("payslip_form"):
     col1, col2 = st.columns(2)
     with col1:
         emp_name = st.text_input("Employee Name")
-        basic_pay = st.number_input("Monthly Basic Salary", min_value=0.0, step=100.0, value=40000.0)
+        emp_id = st.text_input("Employee ID", value="0001")
+        basic_pay = st.number_input("Monthly Basic Salary", min_value=0.0, value=40000.0)
     with col2:
         absent_days = st.number_input("Days Absent", min_value=0, max_value=total_days, value=0)
-        allowance = st.number_input("Allowances/Shares", min_value=0.0, step=100.0, value=0.0)
-        tax = st.number_input("Tax Deduction", min_value=0.0, step=10.0, value=0.0)
+        allowance = st.number_input("Allowances/Shares", min_value=0.0, value=0.0)
+        tax = st.number_input("Tax Deduction", min_value=0.0, value=0.0)
     
     submit = st.form_submit_button("Generate Pay Slip")
 
 if submit:
     if not emp_name:
-        st.warning("Please enter an employee name to proceed.")
+        st.warning("Please enter an employee name.")
     else:
         daily_rate = basic_pay / total_days
         non_work_deduction = daily_rate * absent_days
@@ -60,66 +56,56 @@ if submit:
         pdf.add_page()
         pdf.set_font("Arial", size=10)
         
-        # --- Adjusted Centered Employee Info Section ---
-        start_x = 55
+        # Header Info Section
+        pdf.cell(30, 8, "Pay Date", 0); pdf.cell(70, 8, f": {now.strftime('%Y/%m/%d')}", 0)
+        pdf.cell(35, 8, "Employee Name", 0); pdf.cell(0, 8, f": {emp_name.upper()}", 0, 1)
         
-        # Row 1
-        pdf.set_x(start_x)
-        pdf.cell(50, 10, f"Pay Date: {now.strftime('%Y/%m/%d')}", 0)
-        pdf.cell(50, 10, f"Employee Name: {emp_name}", 0, 1)
+        pdf.cell(30, 8, "Month", 0); pdf.cell(70, 8, f": {current_month_str.upper()}", 0)
+        pdf.cell(35, 8, "Employee ID", 0); pdf.cell(0, 8, f": {emp_id}", 0, 1)
         
-        # Extra nudge for space
-        pdf.ln(2) 
+        pdf.cell(30, 8, f"Total working", 0); pdf.cell(70, 8, f": {total_days - absent_days}", 0, 1)
+        pdf.cell(30, 8, f"days in {now.strftime('%B').lower()}", 0, 1)
         
-        # Row 2
-        pdf.set_x(start_x)
-        pdf.cell(50, 10, f"Month: {current_month_str}", 0)
-        pdf.cell(50, 10, f"Days Worked: {total_days - absent_days}", 0, 1)
+        pdf.ln(5)
         
-        pdf.ln(10) # More space before the table
-        
-        # --- Centered Table Section ---
-        pdf.set_x(start_x)
-        pdf.set_fill_color(240, 240, 240)
+        # Dual Table Construction
+        pdf.set_fill_color(200, 200, 200)
         pdf.set_font("Arial", 'B', 10)
-        pdf.cell(60, 10, "Description", 1, 0, 'L', 1)
-        pdf.cell(40, 10, "Amount", 1, 1, 'R', 1)
+        
+        # Header Row
+        pdf.cell(45, 10, "Earnings", 1, 0, 'C', 1)
+        pdf.cell(45, 10, "Amount", 1, 0, 'C', 1)
+        pdf.cell(50, 10, "Deductions", 1, 0, 'C', 1)
+        pdf.cell(50, 10, "Amount", 1, 1, 'C', 1)
         
         pdf.set_font("Arial", '', 10)
-        rows = [
-            ("Basic Salary", basic_pay),
-            ("Allowances/Shares", allowance),
-            (f"Absent ({absent_days} days)", -non_work_deduction),
-            ("Income Tax", -tax)
-        ]
         
-        for desc, amt in rows:
-            pdf.set_x(start_x)
-            pdf.cell(60, 10, desc, 1)
-            pdf.cell(40, 10, f"{amt:.2f}", 1, 1, 'R')
+        # Row 1: Basic Pay & Tax
+        pdf.cell(45, 10, "Basic Pay", 1); pdf.cell(45, 10, f"{basic_pay:.0f}", 1, 0, 'R')
+        pdf.cell(50, 10, "Tax", 1); pdf.cell(50, 10, f"{tax:.0f}", 1, 1, 'R')
         
-        pdf.set_x(start_x)
-        pdf.set_font("Arial", 'B', 12)
-        pdf.cell(60, 12, "NET PAYABLE", 1)
-        pdf.cell(40, 12, f"{net_pay:.2f}", 1, 1, 'R')
+        # Row 2: Allowance & Absent
+        pdf.cell(45, 10, "Allowance/ shares", 1); pdf.cell(45, 10, f"{allowance:.0f}", 1, 0, 'R')
+        pdf.cell(50, 10, f"non working {absent_days} days", 1); pdf.cell(50, 10, f"{non_work_deduction:.0f}", 1, 1, 'R')
         
+        # Row 3: Totals
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(45, 10, "Total Earnings", 1, 0, 'R'); pdf.cell(45, 10, f"{total_earnings:.0f}", 1, 0, 'R')
+        pdf.cell(50, 10, "Total Deductions", 1, 0, 'R'); pdf.cell(50, 10, f"{total_deductions:.0f}", 1, 1, 'R')
+        
+        # Row 4: Net Pay
+        pdf.cell(140, 10, "Net Pay", 1, 0, 'R'); pdf.cell(50, 10, f"{net_pay:.0f}", 1, 1, 'R')
+        
+        # Footer Section
         pdf.ln(20)
-        pdf.set_font("Arial", '', 10)
-        pdf.cell(90, 10, "__________________________", 0, 0, 'C')
-        pdf.cell(90, 10, "__________________________", 0, 1, 'C')
-        pdf.cell(90, 5, "Employer Signature", 0, 0, 'C')
-        pdf.cell(90, 5, "Employee Signature", 0, 1, 'C')
+        pdf.cell(95, 10, "Employer Signature", 0, 0, 'L')
+        pdf.cell(95, 10, "Employee Signature", 0, 1, 'R')
+        pdf.ln(10)
+        pdf.cell(95, 0.2, "", 1, 0); pdf.cell(5, 0.2, "", 0, 0); pdf.cell(90, 0.2, "", 1, 1)
         
         pdf.ln(10)
-        pdf.set_font("Arial", 'I', 8)
-        pdf.cell(0, 10, "Generated by Al-Ibrahim Medicare Automated System", 0, 1, 'C')
+        pdf.set_font("Arial", 'I', 9)
+        pdf.cell(0, 10, "This is system generated payslip", 0, 1, 'C')
 
         pdf_bytes = pdf.output() 
-        
-        st.success(f"Success! Pay slip for {emp_name} generated.")
-        st.download_button(
-            label="⬇️ Download Pay Slip PDF",
-            data=bytes(pdf_bytes),
-            file_name=f"Payslip_{emp_name.replace(' ', '_')}_{now.strftime('%b_%Y')}.pdf",
-            mime="application/pdf"
-        )
+        st.download_button(label="⬇️ Download Pay Slip", data=bytes(pdf_bytes), file_name=f"Payslip_{emp_name}.pdf", mime="application/pdf")
