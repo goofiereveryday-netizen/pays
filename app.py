@@ -56,20 +56,17 @@ if submit:
         pdf.add_page()
         pdf.set_font("Arial", size=10)
         
-        # Header Info Section
-        pdf.cell(30, 8, "Pay Date", 0); pdf.cell(70, 8, f": {now.strftime('%Y/%m/%d')}", 0)
+        # Header Info Section (Removed Pay Date from here)
         pdf.cell(35, 8, "Employee Name", 0); pdf.cell(0, 8, f": {emp_name.upper()}", 0, 1)
-        
-        pdf.cell(30, 8, "Month", 0); pdf.cell(70, 8, f": {current_month_str.upper()}", 0)
+        pdf.cell(35, 8, "Month", 0); pdf.cell(70, 8, f": {current_month_str.upper()}", 0)
         pdf.cell(35, 8, "Employee ID", 0); pdf.cell(0, 8, f": {emp_id}", 0, 1)
         
-        pdf.cell(30, 8, f"Total working", 0); pdf.cell(70, 8, f": {total_days - absent_days}", 0, 1)
-        pdf.cell(30, 8, f"days in {now.strftime('%B').lower()}", 0, 1)
+        pdf.cell(30, 8, f"Total working days in {now.strftime('%B').lower()}: {total_days - absent_days}", 0, 1)
         
         pdf.ln(5)
         
         # Dual Table Construction
-        pdf.set_fill_color(200, 200, 200)
+        pdf.set_fill_color(240, 240, 240)
         pdf.set_font("Arial", 'B', 10)
         
         # Header Row
@@ -79,33 +76,36 @@ if submit:
         pdf.cell(50, 10, "Amount", 1, 1, 'C', 1)
         
         pdf.set_font("Arial", '', 10)
-        
         # Row 1: Basic Pay & Tax
         pdf.cell(45, 10, "Basic Pay", 1); pdf.cell(45, 10, f"{basic_pay:.0f}", 1, 0, 'R')
         pdf.cell(50, 10, "Tax", 1); pdf.cell(50, 10, f"{tax:.0f}", 1, 1, 'R')
-        
         # Row 2: Allowance & Absent
         pdf.cell(45, 10, "Allowance/ shares", 1); pdf.cell(45, 10, f"{allowance:.0f}", 1, 0, 'R')
         pdf.cell(50, 10, f"non working {absent_days} days", 1); pdf.cell(50, 10, f"{non_work_deduction:.0f}", 1, 1, 'R')
         
-        # Row 3: Totals
+        # Totals & Net Pay
         pdf.set_font("Arial", 'B', 10)
         pdf.cell(45, 10, "Total Earnings", 1, 0, 'R'); pdf.cell(45, 10, f"{total_earnings:.0f}", 1, 0, 'R')
         pdf.cell(50, 10, "Total Deductions", 1, 0, 'R'); pdf.cell(50, 10, f"{total_deductions:.0f}", 1, 1, 'R')
-        
-        # Row 4: Net Pay
         pdf.cell(140, 10, "Net Pay", 1, 0, 'R'); pdf.cell(50, 10, f"{net_pay:.0f}", 1, 1, 'R')
         
-        # Footer Section
+        # Signatures
         pdf.ln(20)
         pdf.cell(95, 10, "Employer Signature", 0, 0, 'L')
         pdf.cell(95, 10, "Employee Signature", 0, 1, 'R')
-        pdf.ln(10)
+        pdf.ln(2)
         pdf.cell(95, 0.2, "", 1, 0); pdf.cell(5, 0.2, "", 0, 0); pdf.cell(90, 0.2, "", 1, 1)
         
+        # System Footer
         pdf.ln(10)
         pdf.set_font("Arial", 'I', 9)
         pdf.cell(0, 10, "This is system generated payslip", 0, 1, 'C')
+
+        # --- NEW: Date at the very bottom right ---
+        pdf.set_font("Arial", '', 9)
+        # Position at X=170, Y=280 (A4 is 297mm high)
+        pdf.set_xy(170, 280)
+        pdf.cell(30, 10, f"{now.strftime('%Y/%m/%d')}", 0, 0, 'R')
 
         pdf_bytes = pdf.output() 
         st.download_button(label="⬇️ Download Pay Slip", data=bytes(pdf_bytes), file_name=f"Payslip_{emp_name}.pdf", mime="application/pdf")
