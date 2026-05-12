@@ -92,7 +92,7 @@ if submit:
         
         pdf.ln(10)
         pdf.set_font("Arial", 'I', 9)
-        pdf.cell(0, 10, "This is system generated payslip", 0, 1, 'C')
+        pdf.cell(0, 10, "This is a system generated payslip", 0, 1, 'C')
 
         pdf_bytes = pdf.output() 
         st.download_button(label="⬇️ Download Pay Slip", data=bytes(pdf_bytes), file_name=f"Payslip_{emp_name}.pdf", mime="application/pdf")
