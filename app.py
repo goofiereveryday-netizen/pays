@@ -25,20 +25,26 @@ class PaySlipPDF(FPDF):
 st.set_page_config(page_title="Al-Ibrahim Medicare Portal", page_icon="🏥")
 st.title("🏥 Al-Ibrahim Medicare")
 
-now = datetime.now()
-_, total_days = calendar.monthrange(now.year, now.month)
-current_month_str = now.strftime('%B %Y')
-
+# We use a form to collect all user choices properly
 with st.form("payslip_form"):
     col1, col2 = st.columns(2)
     with col1:
         emp_name = st.text_input("Employee Name")
         emp_id = st.text_input("Employee ID", value="0001")
-        # Step=1000.0 makes the +/- buttons much more useful
+        
+        # Now isn't that interesting: dynamic calendar selection!
+        # Allows you to pick any day, and we'll extract the month and year from it.
+        selected_date = st.date_input("Select Payslip Month & Year", value=datetime.now())
+        
         basic_pay = st.number_input("Monthly Basic Salary", min_value=0.0, value=40000.0, step=1000.0)
+    
+    # Calculate days based on the user's selected month rather than the absolute current date
+    _, total_days = calendar.monthrange(selected_date.year, selected_date.month)
+    selected_month_str = selected_date.strftime('%B %Y')
+    selected_month_name = selected_date.strftime('%B')
+
     with col2:
         absent_days = st.number_input("Days Absent", min_value=0, max_value=total_days, value=0, step=1)
-        # Step=500.0 for allowances and tax
         allowance = st.number_input("Allowances/Shares", min_value=0.0, value=0.0, step=500.0)
         tax = st.number_input("Tax Deduction", min_value=0.0, value=0.0, step=100.0)
     
@@ -58,12 +64,12 @@ if submit:
         pdf.add_page()
         pdf.set_font("Arial", size=10)
         
-        # Header Info Section
+        # Header Info Section using the user's chosen month
         pdf.cell(35, 8, "Employee Name", 0); pdf.cell(0, 8, f": {emp_name.upper()}", 0, 1)
-        pdf.cell(35, 8, "Month", 0); pdf.cell(70, 8, f": {current_month_str.upper()}", 0)
+        pdf.cell(35, 8, "Month", 0); pdf.cell(70, 8, f": {selected_month_str.upper()}", 0)
         pdf.cell(35, 8, "Employee ID", 0); pdf.cell(0, 8, f": {emp_id}", 0, 1)
         
-        pdf.cell(30, 8, f"Total working days in {now.strftime('%B').lower()}: {total_days - absent_days}", 0, 1)
+        pdf.cell(30, 8, f"Total working days in {selected_month_name.lower()}: {total_days - absent_days}", 0, 1)
         pdf.ln(5)
         
         # Dual Table Construction
@@ -95,4 +101,4 @@ if submit:
         pdf.cell(0, 10, "This is a system generated payslip", 0, 1, 'C')
 
         pdf_bytes = pdf.output() 
-        st.download_button(label="⬇️ Download Pay Slip", data=bytes(pdf_bytes), file_name=f"Payslip_{emp_name}.pdf", mime="application/pdf")
+        st.download_button(label="⬇️ Download Pay Slip", data=bytes(pdf_bytes), file_name=f"Payslip_{emp_name}_{selected_month_name}.pdf", mime="application/pdf")
