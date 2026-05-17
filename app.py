@@ -61,7 +61,7 @@ if submit:
         pdf.add_page()
         pdf.set_font("Arial", size=10)
         
-        # Header Info Section (Now beautifully tidy without the Employee ID)
+        # Header Info Section
         pdf.cell(35, 8, "Employee Name", 0); pdf.cell(0, 8, f": {emp_name.upper()}", 0, 1)
         pdf.cell(35, 8, "Month", 0); pdf.cell(0, 8, f": {selected_month_str.upper()}", 0, 1)
         
@@ -85,12 +85,20 @@ if submit:
         pdf.cell(50, 10, "Total Deductions", 1, 0, 'R'); pdf.cell(50, 10, f"{total_deductions:.0f}", 1, 1, 'R')
         pdf.cell(140, 10, "Net Pay", 1, 0, 'R'); pdf.cell(50, 10, f"{net_pay:.0f}", 1, 1, 'R')
         
-        # Footer
-        pdf.ln(20)
-        pdf.cell(95, 10, "Employer Signature", 0, 0, 'L')
-        pdf.cell(95, 10, "Employee Signature", 0, 1, 'R')
-        pdf.ln(2)
+        # Now isn't that interesting: giving the pen some room to breathe!
+        # Increased spacing before the lines and split the labels down below the lines properly.
+        pdf.ln(25) 
+        
+        # Draw the actual signature lines first
         pdf.cell(95, 0.2, "", 1, 0); pdf.cell(5, 0.2, "", 0, 0); pdf.cell(90, 0.2, "", 1, 1)
+        
+        # Add a comfortable bit of padding between the line and the text below it
+        pdf.ln(3) 
+        
+        # Print the text directly beneath the signature lines
+        pdf.set_font("Arial", 'B', 10)
+        pdf.cell(95, 5, "Employer Signature", 0, 0, 'L')
+        pdf.cell(95, 5, "Employee Signature", 0, 1, 'R')
         
         pdf.ln(10)
         pdf.set_font("Arial", 'I', 9)
